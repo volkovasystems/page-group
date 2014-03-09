@@ -41,8 +41,13 @@ define( "pageGroupDirective",
 									"link": function link( scope, element, attribute ){
 										safeApply( scope );
 										bindDOM( scope, element, attribute );
+
+										//This will bind the halfpage object to the halfpage directive.
+										var pageGroupObject = scope.element.data( "page-group-object" );
+										scope.pageGroupObject = pageGroupObject;
+										pageGroupObject.scope = scope;
 	
-										scope.GUID = attribute.pageGroup;
+										scope.GUID = pageGroupObject.GUID || attribute.pageGroup;
 										if( typeof scope.GUID != "string" ){
 											scope.GUID = chance.guid( ).toLowerCase( );
 										}
