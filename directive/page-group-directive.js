@@ -5,7 +5,8 @@ define( "pageGroupDirective",
 		"chance",
 		"jquery",
 		"requirejs",
-		"angular"
+		"angular",
+		"moduleLoader",
 	],
 	function construct( ){
 		requirejs.config( {
@@ -42,37 +43,42 @@ define( "pageGroupDirective",
 										safeApply( scope );
 										bindDOM( scope, element, attribute );
 
-										//This will bind the halfpage object to the halfpage directive.
+										//This will bind the pagegroup object to the pagegroup directive.
 										var pageGroupObject = scope.element.data( "page-group-object" );
 										scope.pageGroupObject = pageGroupObject;
 										pageGroupObject.scope = scope;
+
+										scope.DOMID = halfpageObject.namespace;
+										scope.element.attr( "domid", scope.DOMID );
 	
 										scope.GUID = pageGroupObject.GUID || attribute.pageGroup;
 										if( typeof scope.GUID != "string" ){
 											scope.GUID = chance.guid( ).toLowerCase( );
 										}
+										
 										scope.namespace = scope.name + "-" + scope.appName.toLowerCase( );
 										scope.safeApply( );
 
 										scope.element.attr( "namespace", scope.namespace );
 										pageGroupStyle( scope.GUID );
+
 										Arbiter.subscribe( "on-resize:" + scope.namespace,
+											"on-resize:" + scope.DOMID,
 											function handler( ){
-												var parentElement = scope.element.parent( );
-												var parentZIndex = parentElement.css( "z-index" );
 												scope.element.css( {
 													"position": "absolute !important",
-													"top": "0px !important",
-													"left": "0px !important",
-													//"z-index": " !important",
-													"height": parentElement.height( ) + "px",
-													"width": parentElement.width( ) + "px"
+													"top": scope.pageGroupObject.getY( ),
+													"left": scope.pageGroupObject.getX( ),
+													"z-index": scope.pageGroupObject.getZIndex( ),
+													"height": scope.pageGroupObject.getHeight( ),
+													"width": scope.pageGroupObject.getWidth( )
 												} );
 											} );
 									}
 								}
 							}
 						] );
-				Arbiter.publish( "module-loaded:page-group-directive", null, { "persist": true } );
+				
+				moduleLoader( "page-group-directive" ).onLoad( );
 			} );
 	} );

@@ -8,11 +8,10 @@ try{ var base = window; }catch( error ){ base = exports; }
 			"requirejs",
 			"underscore",
 			"angular",
-			"jquery"
+			"jquery",
+			"moduleLoader"
 		],
 		function construct( async ){
-			var moduleLoadHandler = Arbiter.create( );
-
 			requirejs.config( {
 				"paths": {
 					"page": staticBaseURL + "/page/page",
@@ -30,11 +29,7 @@ try{ var base = window; }catch( error ){ base = exports; }
 					"appDetermine"
 				],
 				function construct( pageModule, pageComponentTemplate ){
-					pageModule( function onModuleLoad( ){
-						moduleLoadHandler.publish( "module-loaded:page", null, { "persist": true } );
-					} );
-
-					var pageApp = angular.module( "PageGroup", [ ] );
+					var pageGroupApp = angular.module( "PageGroup", [ ] );
 					var appNamespace = appDetermine( "PageGroup" ).name;
 					
 					safeApplyFactory( appNamespace );
@@ -85,7 +80,10 @@ try{ var base = window; }catch( error ){ base = exports; }
 
 						this.pageGroupContainer = componentObject;
 						pageGroupComponent = $( pageGroupComponentTemplate );
+
+						pageGroupComponent.data( "page-group-object", self );
 						pageGroupComponent.attr( "app-name", appNamespace );
+						
 						componentObject.append( pageGroupComponent );
 
 						var self = this;
@@ -95,7 +93,6 @@ try{ var base = window; }catch( error ){ base = exports; }
 							}
 							componentObject.attr( "ng-bound-app", appNamespace );
 							componentObject.addClass( "page-group-attached" );
-							pageGroupComponent.data( "page-group-object", self );
 
 							//Start attaching the pages also.
 							self.attachPages( );	
@@ -104,12 +101,15 @@ try{ var base = window; }catch( error ){ base = exports; }
 
 					PageGroup.prototype.attachPages = function attachPages( ){
 						for( var index = 0; index < self.pageList; index++ ){
-							self.pageList[ index ].attachComponent( pageGroupComponent );
+							var page = this.pageList[ index ];
+							if( !page.checkIfAttached( ) ){
+								page.attachComponent( pageGroupComponent );
+							}
 						}
 					};
 
 					PageGroup.prototype.getCurrentPage = function getCurrentPage( ){
-						this.currentPage = this.currentPage || _.last( this.pageList );
+						this.currentPage = _.last( this.pageList );
 						return this.currentPage;
 					};
 
@@ -124,11 +124,11 @@ try{ var base = window; }catch( error ){ base = exports; }
 
 					PageGroup.prototype.getSubPageGroup = function getSubPageGroup( namespace ){
 						return this.subPageGroupList[ namespace ];
-					}
+					};
 
 					PageGroup.prototype.getSubPageGroupList = function getSubPageGroupList( ){
 						return this.subPageGroupList;
-					}
+					};
 
 					PageGroup.prototype.addSubPageGroup = function addSubPageGroup( namespace, GUID ){
 						var subPageGroup = new PageGroup( namespace );
@@ -147,18 +147,83 @@ try{ var base = window; }catch( error ){ base = exports; }
 
 					};
 
-					base.PageGroup = PageGroup;
-				}  );
-			
-			return ( function onModuleLoad( handler ){
-				async.parallel( [
-						function handler( callback ){
-							Arbiter.subscribe( "module-loaded:page-group-directive", callback );
-						},
-						function handler( callback ){
-							moduleLoadHandler.subscribe( "module-loaded:page", callback );
+					PageGroup.prototype.removePage = function removePage( page ){
+
+					};
+
+					/*
+						This is the default layout method for retrieving
+							the x distance for the pagegroup.
+
+						By attaching a layout calibration this can be changed.
+					*/
+					PageGroup.prototype.getX = function getX( ){
+						return 0;
+					};
+
+					/*
+						This is the default layout method for retrieving
+							the y distance for the pagegroup.
+
+						By attaching a layout calibration this can be changed.
+					*/
+					PageGroup.prototype.getY = function getY( ){
+						return 0;
+					};
+
+					/*
+						The base default z-index for any element is 1. 
+
+						We may be retrieving value as "auto" this is due
+							to the fact that the position is not "absolute".
+
+						Though this method will not check it any component
+							belonging to the page component concept must be
+							configured with "absolute" position.
+
+						The default z-index now is the parent's z-index + 1.
+
+						By attaching a layout calibration this can be changed.
+					*/
+					PageGroup.prototype.getZIndex = function getZIndex( ){
+						var parentElement = this.scope.element.parent( );
+						var zIndex = parentElement.css( "z-index" );
+						if( zIndex === "auto" ){
+							return 1;
+						}else if( typeof zIndex == "string" ){
+							zIndex = parseInt( zIndex );
 						}
-					], handler );
-			} );
+						if( isNaN( zIndex ) ){
+							throw new Error( "invalid z-index value" );
+						}
+						return zIndex + 1;
+					};
+
+					/*
+						This is the default dimension method for retrieving
+							the height for the pagegroup.
+
+						By attaching a dimension calibration this can be changed.
+					*/
+					PageGroup.prototype.getHeight = function getHeight( ){
+						var parentElement = this.scope.element.parent( );
+						return parentElement.height( );
+					};
+
+					/*
+						This is the default dimension method for retrieving
+							the height for the pagegroup.
+
+						By attaching a dimension calibration this can be changed.
+					*/
+					PageGroup.prototype.getWidth = function getWidth( ){
+						var parentElement = this.scope.element.parent( );
+						return parentElement.width( );
+					};
+
+					base.PageGroup = PageGroup;
+				} );
+			
+			return moduleLoader( "page-group-directive", pageModule ).notify;
 		} );
 } )( base );
