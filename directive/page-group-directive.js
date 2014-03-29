@@ -6,7 +6,7 @@ define( "pageGroupDirective",
 		"jquery",
 		"requirejs",
 		"angular",
-		"moduleLoader",
+		"moduleLoadNotifier",
 	],
 	function construct( ){
 		requirejs.config( {
@@ -79,6 +79,6 @@ define( "pageGroupDirective",
 							}
 						] );
 				
-				moduleLoader( "page-group-directive" ).onLoad( );
+				moduleLoadNotifier( "page-group-directive" ).notifyModuleLoaded( );
 			} );
 	} );

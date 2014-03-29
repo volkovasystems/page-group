@@ -9,7 +9,7 @@ try{ var base = window; }catch( error ){ base = exports; }
 			"underscore",
 			"angular",
 			"jquery",
-			"moduleLoader"
+			"moduleLoadNotifier"
 		],
 		function construct( async ){
 			requirejs.config( {
@@ -47,7 +47,7 @@ try{ var base = window; }catch( error ){ base = exports; }
 							A page group can never be empty.
 							For every creation of page group there must be a ready page inside.
 						*/
-						var firstPage = new Page( "first-page" );
+						var firstPage = new Page( namespace + "-first-page" );
 						this.pageList.push( firstPage );
 						this.currentPage = firstPage;
 					};
@@ -224,6 +224,6 @@ try{ var base = window; }catch( error ){ base = exports; }
 					base.PageGroup = PageGroup;
 				} );
 			
-			return moduleLoader( "page-group-directive", pageModule ).notify;
+			return moduleLoadNotifier( "page-group-directive", pageModule );
 		} );
 } )( base );
