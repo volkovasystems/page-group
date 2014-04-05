@@ -7,6 +7,7 @@ define( "pageGroupComponentTemplate",
 		return domoStringify( DIV( {
 			"page-group": "",
 			"auto-resize": "",
-			"name": "page-group"
+			"name": "page-group",
+			"container": ""
 		} ) );
 	} );
